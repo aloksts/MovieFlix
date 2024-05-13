@@ -1,6 +1,12 @@
 # MovieFlix 
 --Create React App
 --configured Tailwind css
+--Header
+--Routing
+--Login 
+--signup
+--form validation
+--useRef Hook
 
 # Features
 -Login 
