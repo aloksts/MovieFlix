@@ -3,14 +3,20 @@ import { useState ,useRef} from 'react';
 import Header from './Header';
 import { validData } from '../utils/validate';
 import { auth } from '../utils/firebase';
-import {createUserWithEmailAndPassword ,signInWithEmailAndPassword} from "firebase/auth";
+import {createUserWithEmailAndPassword ,signInWithEmailAndPassword, updateProfile} from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addUser } from '../utils/userSlice';
+
 
 const Login = () => {
    const [isSignIn, setissignIn]=useState(true);
    const [errorMsg,seterrorMsg]=useState(null);
    const navigate=useNavigate();
+   const dispatch=useDispatch();
+
   
+   const name=useRef(null);
    const email=useRef(null);
    const password=useRef(null);
 
@@ -25,13 +31,20 @@ const Login = () => {
    createUserWithEmailAndPassword(auth, 
       email.current.value, 
       password.current.value)
+
   .then((userCredential) => {
     // Signed up 
     const user = userCredential.user;
-    console.log(user);
-    navigate("/browse");
-
-    // ...
+    updateProfile(user,{
+      displayName:name.current.value,
+    })
+    .then(()=>{
+      const {uid,email,displayName}=auth.currentUser;
+      dispatch(addUser({uid:uid,email:email,displayName:displayName}));
+    })
+    .catch((error)=>{
+      seterrorMsg(error.message);
+    });
   })
   .catch((error) => {
           const errorCode = error.code;
@@ -45,9 +58,11 @@ const Login = () => {
          signInWithEmailAndPassword(auth,email.current.value, password.current.value)
   .then((userCredential) => {
     // Signed in 
-    // const user = userCredential.user;
-    console.log("signin");
-    navigate("/browse");
+    const user = userCredential.user;
+    console.log(user);
+  
+   
+  
     // ...
   })
   .catch((error) => {
@@ -55,7 +70,7 @@ const Login = () => {
     const errorMessage = error.message;
     console.log(errorCode+errorMessage);
   });
-      } 
+  } 
    };
    const toggleSignInForm=()=>{
       setissignIn(!isSignIn);
@@ -69,7 +84,7 @@ const Login = () => {
     </div>
     <form onSubmit={(e)=>{e.preventDefault();}} className='w-3/12 absolute p-12 bg-black my-36 mx-auto right-0 left-0 text-white rounded-lg bg-opacity-80'>
     <h1 className='text-3xl text-wt py-4'>{isSignIn?"Sign In":"Sign Up"}</h1>
-    {!isSignIn && <input type="text" placeholder='Full Name' className='p-2 my-4 w-full bg-slate-500'/>}
+    {!isSignIn && <input type="text" ref={name} placeholder='Full Name' className='p-2 my-4 w-full bg-slate-500'/>}
 
     <input type="text" ref={email} placeholder='email or phone number' className='p-2 my-4 w-full bg-slate-500'/>
     <input type="password" ref={password} placeholder='password' className='p-2 my-4 w-full  bg-slate-500'/>
